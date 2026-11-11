@@ -78,13 +78,13 @@ export function SlidePlantLabor({ report, page, total }: { report: PlantReport; 
               const value=t[m.key] == null ? null : t[m.key]!/scale;
               const prev=t.prevMonth?.[m.key], year=t.prevYear?.[m.key];
               return <td key={m.key}><div className="num font-semibold">{fmtNum(value,1)}</div>
-                <Comparison compact label="전월" metric={m.key} value={value} base={prev==null?null:prev/scale} unit={m.unit}/>
-                <Comparison compact label="전년" metric={m.key} value={value} base={year==null?null:year/scale} unit={m.unit}/>
+                <Comparison compact label={m.key === 'unitLaborCost' ? `전월 ${fmtNum(prev, 1)}` : "전월"} metric={m.key} value={value} base={prev==null?null:prev/scale} unit={m.unit}/>
+                <Comparison compact label={m.key === 'unitLaborCost' ? `전년 ${fmtNum(year, 1)}` : "전년"} metric={m.key} value={value} base={year==null?null:year/scale} unit={m.unit}/>
               </td>;
             })}</tr>)}</tbody>
           </table>
         </div>
-        <div className="text-[14px] text-[var(--ink-3)]">{labor.warnings.join(' · ')} · 기준값 0이면 증감률은 –로 표시합니다.</div>
+        <div className="text-[14px] text-[var(--ink-3)]">{labor.warnings.join(' · ')} · 단위당 노무비 = 노무비 ÷ 동일 팀 생산량 (낮을수록 개선) · 기준값 0이면 증감률은 –로 표시합니다.</div>
       </div>}
   </SlideFrame>;
 }

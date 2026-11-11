@@ -31,9 +31,9 @@ function HeadlineChip({ cost, unit }: { cost: CostReport | null; unit: string })
 
 // ═════════════════════ P1 요약 ═════════════════════
 function GaugePanel({
-  title, value, target, prev, lowerIsBetter = false, fmt,
+  title, value, target, prev, lowerIsBetter = false, fmt, detail,
 }: {
-  title: string; value: number | null; target: number | null; prev: number | null; lowerIsBetter?: boolean; fmt: (v: number | null) => string;
+  title: string; value: number | null; target: number | null; prev: number | null; lowerIsBetter?: boolean; fmt: (v: number | null) => string; detail?: string;
 }) {
   const att = attainment(value, target, lowerIsBetter);
   const tone = toneOfAttainment(att);
@@ -43,6 +43,7 @@ function GaugePanel({
       <div className="self-start text-[18px] font-semibold text-[var(--navy)]">{title}</div>
       <HalfGauge attainment={att} color={color} size={196} center={fmt(value)} sub={att === null ? "목표 없음" : `달성 ${att.toFixed(1)}%`} />
       <div className="num text-[14px] text-[var(--ink-2)]">목표 {fmt(target)} · 전년 {fmt(prev)}</div>
+      {detail && <div className="num mt-1 text-center text-[13px] text-[var(--ink-2)]">{detail}</div>}
     </div>
   );
 }
@@ -67,6 +68,12 @@ export function SlidePlantSummary({ report, page, total }: Common) {
   const pm = cost?.summary.prevMonth ?? null;
   const pt = ops?.plantTotal ?? null;
   const tgt = ops?.teams.find((t) => pt?.primaryTeams.includes(t.team))?.targets ?? null;
+  const qtyUnit = plant === "K1" ? "ton" : units.qty;
+  const displayQty = (v: number | null | undefined) => fmtNum(v == null ? null : v / (plant === "K1" ? 1000 : 1), 1);
+  const primary = ops?.teams.filter(t => pt?.primaryTeams.includes(t.team)) ?? [];
+  const planQty = primary.reduce((a,t) => a + t.totals.planQty, 0);
+  const actualQty = primary.reduce((a,t) => a + t.totals.actualQty, 0);
+  const planHr = ops?.teams.reduce((a,t) => a + t.totals.planHr, 0) ?? 0;
   const k2Line1 = plant === "K2" ? cost?.lines.find((l) => l.line === "즉석밥1" && l.hasData) : undefined;
 
   return (
@@ -81,7 +88,7 @@ export function SlidePlantSummary({ report, page, total }: Common) {
                 <div className="flex items-end justify-between">
                   <CompareBars width={290} height={250} digits={1} items={[
                     { label: "전년", value: nz(py?.mfgUnit), color: "var(--s-prev)" },
-                    { label: "목표", value: nz(s.targetMfgUnit), color: "var(--s-target)" },
+                    { label: "전월", value: nz(pm?.mfgUnit), color: "var(--s-target)" },
                     { label: "실적", value: nz(s.mfgUnit), color: "var(--s-actual)", emphasis: true },
                   ]} />
                   <div className="flex flex-col gap-4 pb-6">
@@ -94,9 +101,9 @@ export function SlidePlantSummary({ report, page, total }: Common) {
                 {k2Line1 && <div className="kicker">즉석밥2 저가동 영향 제외 시 즉석밥1 {fmtNum(k2Line1.mfgUnit, 1)}{units.cost}</div>}
               </div>
               <div className="panel flex flex-col">
-                <div className="panel-title">▣ 생산량 <small>{units.qty} · 가동 {s.opDays}일</small></div>
+                <div className="panel-title">▣ 생산량 <small>{qtyUnit} · 가동 {s.opDays}일</small></div>
                 <div className="flex items-end justify-between">
-                  <CompareBars width={290} height={250} format={fmtQty} items={[
+                  <CompareBars width={290} height={250} format={displayQty} items={[
                     { label: "전년", value: nz(py?.qty), color: "var(--s-prev)" },
                     { label: "전월", value: nz(pm?.qty), color: "var(--s-target)" },
                     { label: "실적", value: nz(s.qty), color: "var(--s-actual)", emphasis: true },
@@ -104,7 +111,7 @@ export function SlidePlantSummary({ report, page, total }: Common) {
                   <div className="flex flex-col gap-4 pb-6">
                     <Delta label="전년대비" metric="qty" value={pctDelta(s.qty, py?.qty)} />
                     <Delta label="전월대비" metric="qty" value={pctDelta(s.qty, pm?.qty)} />
-                    <Delta label="계획달성" metric="qty" value={pt ? (pt.achievementRate - 1) * 100 : null} size={18} />
+                    <Delta label="계획대비" metric="qty" value={pt ? (pt.achievementRate - 1) * 100 : null} size={18} />
                   </div>
                 </div>
               </div>
@@ -114,7 +121,7 @@ export function SlidePlantSummary({ report, page, total }: Common) {
           )}
 
           <div className="panel flex flex-col">
-            <div className="panel-title">▣ 생산성 <small>{units.prod} · 12개월 추이 (빨강 당해 · 회색 전년 · 점선 목표)</small></div>
+            <div className="panel-title">▣ 생산성 <small>{units.prod} · 12개월 추이 (빨강 실선 당해 · 회색 실선 전년 · 남색 점선 목표)</small></div>
             {cost && s ? (
               <div className="flex flex-1 items-center gap-6">
                 <div className="flex w-[200px] flex-col gap-4">
@@ -153,9 +160,9 @@ export function SlidePlantSummary({ report, page, total }: Common) {
               fmt={(v) => (v === null ? "–" : `${v.toFixed(1)}%`)} />
             {ops && pt ? (
               <>
-                <GaugePanel title="계획달성률" value={pt.achievementRate} target={tgt?.achievementTarget ?? 0.98} prev={pt.prevYear?.achievementRate ?? null} fmt={(v) => fmtPct(v)} />
+                <GaugePanel title="물량 계획달성률" detail={`계획 ${displayQty(planQty)} / 실적 ${displayQty(actualQty)} ${qtyUnit} · 생산일보`} value={pt.achievementRate} target={tgt?.achievementTarget ?? 0.98} prev={pt.prevYear?.achievementRate ?? null} fmt={(v) => fmtPct(v)} />
                 <CapacityPanel report={report} compact />
-                <GaugePanel title="비계획정지율" value={pt.downtimeRate} target={tgt?.downtimeTarget ?? 0.1} prev={pt.prevYear?.downtimeRate ?? null} lowerIsBetter fmt={(v) => fmtPct(v)} />
+                <GaugePanel title="비계획정지율" detail={`계획 ${fmtNum(planHr, 1)}h / 비계획 ${fmtNum(pt.downtimeMinutes / 60, 1)}h`} value={pt.downtimeRate} target={tgt?.downtimeTarget ?? 0.1} prev={pt.prevYear?.downtimeRate ?? null} lowerIsBetter fmt={(v) => fmtPct(v)} />
               </>
             ) : (
               <div className="col-span-1 row-span-2"><SourceError message={report.opsError ?? "생산일보 데이터 없음"} /></div>
@@ -180,17 +187,17 @@ function BridgePanel({ title, bridge, unit, baseLabel }: { title: string; bridge
         <span>▣ {title}</span>
         <small className="num">{baseLabel} {fmtNum(bridge.baseUnit, 1)} → 당월 {fmtNum(bridge.currUnit, 1)} {unit}</small>
       </div>
-      <BridgeWaterfall width={800} height={175} steps={[
+      <BridgeWaterfall width={800} height={160} steps={[
         { label: "생산구성 영향", value: bridge.mixEffect },
         { label: "품목원가 영향", value: bridge.perfEffect },
         { label: "총 차이", value: bridge.diff, total: true },
       ]} />
       <div className="mt-2 flex flex-col gap-1">
-        <div className="kicker">제조원가 변동 주요 품목 {top.length}개 · + 상승 / − 하락 ({unit})</div>
+        <div className="kicker">주요 품목 {top.length}개 · 녹색 − 하락 / 적색 + 상승 · 기여도 ({unit})</div>
         {top.map((d) => (
           <div key={d.productCode} className="flex min-w-0 justify-between gap-4 text-[15px] leading-tight">
             <span className="min-w-0 truncate" title={d.productName}>{d.productName}{d.isNew && <span className="ml-2 badge bg-[var(--gold-tint)] text-[var(--ink)] !text-[12px]">신규</span>}</span>
-            <span className={`num whitespace-nowrap tone-${deltaTone("cost", d.totalImpact)}`}>{fmtSigned(d.totalImpact, 1)}</span>
+            <span className={`num whitespace-nowrap tone-${deltaTone("cost", d.totalImpact)}`}>{fmtSigned(d.totalImpact, 1)}<span className="ml-2 text-[12px] text-[var(--ink-3)]">{baseLabel} 단가 {fmtNum(d.baseUnitCost, 1)}→{fmtNum(d.unitCost, 1)}</span></span>
           </div>
         ))}
       </div>
@@ -215,10 +222,10 @@ export function SlidePlantCost({ report, page, total }: Common) {
         </div>
         <div className="grid min-h-0 gap-6" style={{ gridTemplateColumns: "1fr 700px" }}>
           <div className="panel overflow-hidden">
-            <div className="panel-title mb-2">▣ 라인별 단위원가 <small>{units.cost} · 등급 = 재료비 초과율</small></div>
+            <div className="panel-title mb-2">▣ 라인별 단위원가 <small>{units.cost} · 등급 = 재료비 목표 대비 차이율</small></div>
             <table className={`tbl tbl-compact ${lines.length > 9 ? "tbl-dense" : ""}`}>
               <thead>
-                <tr><th>라인</th><th>생산량</th><th>제조원가</th><th>목표</th><th>목표대비</th><th>전월대비</th><th>재료비 초과</th><th>등급</th></tr>
+                <tr><th>라인</th><th>생산량 ({plant === "K1" ? "TON" : units.qty})</th><th>제조원가</th><th>목표</th><th>목표대비</th><th>전월대비</th><th>재료비 관리</th><th>등급</th></tr>
               </thead>
               <tbody>
                 {lines.map((l) => {
@@ -227,7 +234,7 @@ export function SlidePlantCost({ report, page, total }: Common) {
                   return (
                     <tr key={l.id}>
                       <td>{l.label}{l.note && " *"}</td>
-                      <td className="num">{l.hasData ? fmtQty(l.qty) : "–"}</td>
+                      <td className="num">{l.hasData ? (plant === "K1" ? fmtNum(l.qty / 1000, 1) : fmtQty(l.qty)) : "–"}</td>
                       <td className="num font-semibold">{l.hasData ? fmtNum(l.mfgUnit, 1) : "–"}</td>
                       <td className="num text-[var(--ink-3)]">{fmtNum(nz(l.targetUnit), 1)}</td>
                       <td className={`num tone-${deltaTone("cost", vsT)}`}>{fmtSigned(vsT, 1, "%")}</td>
@@ -243,7 +250,7 @@ export function SlidePlantCost({ report, page, total }: Common) {
           </div>
           <div className="panel overflow-hidden">
             <div className="panel-title mb-2">
-              ▣ 재료비 목표 초과 품목 Top 5
+              ▣ 재료비 관리 · 목표 초과 Top 5
               <small>전체 {cost.risk.totalCount}건 · 개선잠재 {fmtWon(cost.risk.totalImprovement)}</small>
             </div>
             <table className="tbl">

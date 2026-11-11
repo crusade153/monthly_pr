@@ -3,13 +3,13 @@ import { revalidatePath } from 'next/cache';
 import { and, eq } from 'drizzle-orm';
 import { getSession } from '@/lib/auth/session';
 import { db, schema } from '@/lib/db/client';
-import { CAPACITY_SCOPES } from '@/domain/capacity';
+import { CAPACITY_INPUT_SCOPES } from '@/domain/capacity';
 import { MONTH_RE } from '@/domain/month';
 
 export async function saveCapacity(input: { month: string; scope: string; fullQty: number; version: number }): Promise<{ ok: boolean; message: string; version?: number }> {
   const session = await getSession();
   if (!session || session.role !== '전체관리자') return { ok: false, message: '전체관리자만 CAPA를 설정할 수 있습니다.' };
-  if (!MONTH_RE.test(input.month) || !CAPACITY_SCOPES.some(s => s.key === input.scope) || !Number.isFinite(input.fullQty) || input.fullQty <= 0 || input.fullQty > 1e12 || !Number.isInteger(input.version) || input.version < 0) return { ok: false, message: '월·대상·생산량을 확인해주세요. CAPA는 0보다 큰 값이어야 합니다.' };
+  if (!MONTH_RE.test(input.month) || !CAPACITY_INPUT_SCOPES.some(s => s.key === input.scope) || !Number.isFinite(input.fullQty) || input.fullQty <= 0 || input.fullQty > 1e12 || !Number.isInteger(input.version) || input.version < 0) return { ok: false, message: '월·대상·생산량을 확인해주세요. CAPA는 0보다 큰 값이어야 합니다.' };
   const t = schema.mrMonthlyCapacity;
   try {
     let changed;

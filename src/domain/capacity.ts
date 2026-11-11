@@ -6,10 +6,12 @@ export const CAPACITY_SCOPES = [
   { key: 'K2-2', plant: 'K2', label: '즉석밥 2라인', unit: '식' },
   { key: 'K3', plant: 'K3', label: 'K3 공장', unit: '식' },
 ] as const;
+export const CAPACITY_INPUT_SCOPES = CAPACITY_SCOPES.flatMap(s => [s, { ...s, key: `${s.key}-day`, label: `${s.label} · 주간 1교대`, day: true }]);
 export type CapacityKey = typeof CAPACITY_SCOPES[number]['key'];
 export type CapacitySetting = { month: string; scope: string; fullQty: number; version: number; updatedBy: string; updatedAt: string };
 export interface CapacityRow {
   key: CapacityKey; label: string; unit: string; qty: number | null; fullQty: number | null;
+  dayQty: number | null; dayRate: number | null;
   rate: number | null; prevRate: number | null; prevYearRate: number | null;
 }
 export interface CapacityReport { rows: CapacityRow[]; error: string | null }
@@ -30,7 +32,8 @@ export function buildCapacityReport(plant: PlantCode, month: string, cost: CostR
     const capacity = (m: string) => error ? null : settings.find(s => s.month === m && s.scope === scope.key)?.fullQty ?? null;
     const rate = (q: number | null, c: number | null) => q !== null && c !== null && c > 0 ? q / c : null;
     const qty = quantity('current'), fullQty = capacity(month);
-    return { ...scope, qty, fullQty, rate: rate(qty, fullQty),
+    const dayQty = error ? null : settings.find(s => s.month === month && s.scope === `${scope.key}-day`)?.fullQty ?? null;
+    return { ...scope, qty, fullQty, dayQty, dayRate: rate(qty, dayQty), rate: rate(qty, fullQty),
       prevRate: cost ? rate(quantity('prevMonth'), capacity(cost.prevMonth)) : null,
       prevYearRate: cost ? rate(quantity('prevYear'), capacity(cost.prevYearMonth)) : null };
   }) };

@@ -33,7 +33,7 @@ export function CompareBars({
             ) : (
               <>
                 <rect x={x} y={top + h - bh} width={bw} height={bh} rx={4} fill={it.color} />
-                <text x={x + bw / 2} y={top + h - bh - 12} textAnchor="middle" fontSize={it.emphasis ? 26 : 22}
+                <text x={x + bw / 2} y={top + h - bh - 12} textAnchor="middle" fontSize={Math.min(it.emphasis ? 26 : 22, slot / (show(v).length * 0.63))}
                   fontWeight={it.emphasis ? 700 : 500} fontFamily={FONT} fill="var(--ink)">{show(v)}</text>
               </>
             )}

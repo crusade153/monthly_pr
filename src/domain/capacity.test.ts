@@ -22,3 +22,15 @@ test('CAPA 미입력·0·데이터 오류를 0%로 표시하지 않는다',()=>{
  assert.equal(buildCapacityReport('K1','2026-10',cost,[setting('2026-10','K1-frozen',0)],null).rows[0].rate,null);
  assert.equal(buildCapacityReport('K1','2026-10',cost,[setting('2026-10','K1-frozen',100)],'DB 오류').rows[0].rate,null);
 });
+
+test('주간 1교대 CAPA는 풀 CAPA와 별도 월 기준값을 사용한다', () => {
+ const settings = [setting('2026-10','K1-frozen',400),setting('2026-10','K1-frozen-day',100)];
+ const row = buildCapacityReport('K1','2026-10',cost,settings,null).rows[0];
+ assert.equal(row.rate,0.25); assert.equal(row.dayRate,1); assert.equal(row.dayQty,100);
+ assert.equal(buildCapacityReport('K1','2026-10',cost,settings.slice(0,1),null).rows[0].dayRate,null);
+ assert.equal(buildCapacityReport('K1','2026-10',cost,settings,'DB 오류').rows[0].dayRate,null);
+ for (const [plant,scope] of [['K2','K2-1'],['K3','K3']] as const) {
+  const r=buildCapacityReport(plant,'2026-10',cost,[setting('2026-10',scope+'-day',500)],null).rows[0];
+  assert.equal(r.rate,null); assert.equal(r.dayRate,2);
+ }
+});
