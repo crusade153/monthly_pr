@@ -1,4 +1,6 @@
-// 표지 → 종합 → K1(요약·팀별·원가·운영·인력/노무비) → K2 → K3. 전체 15장, K1 5장, K2/K3 4장.
+import { noteDetailPages } from '@/domain/notes-layout';
+import { SlidePlantNotes } from './NotesBlock';
+// 표지 → 종합 → K1(요약·팀별·원가·운영·인력/노무비) → K2 → K3. 기본 15장, K1 5장, K2/K3 4장. 긴 노트는 요약 다음에 상세 장을 추가한다.
 import type { MonthBundle } from "@/lib/load-report";
 import type { PlantCode } from "@/domain/types";
 import { SlidePlantCost, SlidePlantOps, SlidePlantSummary } from "./PlantSlides";
@@ -23,6 +25,9 @@ export function buildDeck(bundle: MonthBundle, opts: { onlyPlant?: PlantCode } =
   }
   reports.forEach((r) => {
     specs.push({ id: `${r.plant}-summary`, plant: r.plant, label: `${r.plant} 요약`, render: (p, t) => <SlidePlantSummary report={r} page={p} total={t} /> });
+    noteDetailPages(r.notes).forEach((detail,index) => {
+      specs.push({ id: `${r.plant}-notes-${index}`, plant: r.plant, label: `${r.plant} 노트 상세 ${index+1}`, render: (p,t) => <SlidePlantNotes report={r} detail={detail} page={p} total={t}/> });
+    });
     if (r.plant === 'K1') specs.push({ id: 'K1-teams', plant: r.plant, label: 'K1 팀별 실적', render: (p,t) => <SlideK1Teams report={r} page={p} total={t} /> });
     specs.push({ id: `${r.plant}-cost`, plant: r.plant, label: `${r.plant} 원가`, render: (p, t) => <SlidePlantCost report={r} page={p} total={t} /> });
     specs.push({ id: `${r.plant}-ops`, plant: r.plant, label: `${r.plant} 운영`, render: (p, t) => <SlidePlantOps report={r} page={p} total={t} /> });

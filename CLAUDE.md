@@ -16,7 +16,7 @@ K1·K2·K3 생산부문 월간 보고서를 자동으로 만드는 Next.js 16 �
 - 발표 모드 FLIP 대상은 `data-morph` 4종(plant-title, month-badge, headline-kpi, page-no)만.
 
 ## 라우트
-`/` 월 선택·공장 카드·노트 상태 · `/report/yyyyMM` 전체 15장 · `/report/yyyyMM/K1` K1 5장(종합 요약·팀별 실적·원가·운영·인력/노무비), K2/K3 각 4장 · `/print/yyyyMM` A4 가로 · `/edit/yyyyMM/K1` 노트 편집(낙관적 잠금, 이력) · `/admin/capacity?month=yyyy-MM` 전체관리자 풀 CAPA 설정 · `/login` plog 계정 PIN.
+`/` 월 선택·공장 카드·노트 상태 · `/report/yyyyMM` 전체 15장 · `/report/yyyyMM/K1` K1 5장(종합 요약·팀별 실적·원가·운영·인력/노무비), K2/K3 각 4장(긴 노트는 요약 다음 상세 페이지 자동 추가) · `/print/yyyyMM` A4 가로 · `/edit/yyyyMM/K1` 노트 편집(낙관적 잠금, 이력) · `/admin/capacity?month=yyyy-MM` 전체관리자 풀 CAPA 설정 · `/login` plog 계정 PIN.
 
 풀 CAPA: `mr_monthly_capacity`는 monthly_pr 소유. 고정 기준 K1 냉동·조미 kg, K2 1·2라인 식, K3 공장 식 생산 가능량을 저장한다. 가동률 = product-cst 해당 범위 월 생산량 / 입력한 월 CAPA. 미입력은 null, 당월·전월·전년은 동일한 고정 CAPA 사용. 기존 월별 저장값은 scope별 가장 최근 저장값을 공통 기준으로 읽으며 월마다 입력하지 않는다. 작업시간/계획시간을 이 가동률에 사용하지 않는다. `domain/capacity.ts`에서 월간 보고 고유 설정과 실적을 결합한다.
 
@@ -30,3 +30,5 @@ plog `users` 의 이름+PIN, `session` 쿠키 포맷 동일(`SESSION_SECRET` 같
 
 ## 확장 지점
 AI 초안: `domain/notes-draft.ts` 의 `NoteDraftProvider` 를 구현해 `draftProvider` 로 바꾸면 된다(입력 = `PlantReport`).
+
+노트: 요약 노트 영역은 내용량에 따라 배분하며 빈 섹션은 최소 공간만 사용. 긴 노트는 `domain/notes-layout.ts`에서 줄바꿈·페이지 분할하고 `buildDeck`이 상세 장을 추가하여 발표/인쇄 모두 전문을 포함한다. 편집 미리보기와 슬라이드는 `NoteLineView`를 공유한다.

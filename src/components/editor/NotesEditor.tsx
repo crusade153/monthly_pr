@@ -1,5 +1,7 @@
 "use client";
 
+import { NoteLineView } from '@/components/slides/NoteLineView';
+
 import { useState, useTransition } from "react";
 import { saveNoteAction, type SaveState } from "@/app/edit/[yyyymm]/[plant]/actions";
 import { NOTE_HINT, parseNoteLines } from "@/domain/notes-format";
@@ -52,28 +54,15 @@ export function NotesEditor({ title, note, editable, placeholder }: { title: str
           <p className="mt-2 text-xs text-[var(--ink-3)]">{NOTE_HINT} · Ctrl+S 저장</p>
         </div>
         <div className="rounded-lg border border-[var(--line)] bg-[var(--base)] p-4" aria-label="미리보기">
-          <div className="eyebrow mb-2">슬라이드 미리보기</div>
+          <div className="eyebrow mb-2">전체 내용 미리보기</div>
           {lines.length === 0 && <p className="text-sm text-[var(--ink-3)]">내용이 없습니다.</p>}
           <div className="flex flex-col gap-1.5 text-[15px]">
-            {lines.map((l, i) =>
-              l.kind === "heading" ? (
-                <div key={i} className="mt-1 font-semibold text-[var(--navy)]">■ {l.text}</div>
-              ) : (
-                <div key={i} className="flex gap-2" style={{ paddingLeft: l.kind === "bullet" && l.depth ? 18 : 0 }}>
-                  <span className={l.kind === "number" ? "num text-[var(--navy)]" : "text-[var(--gold)]"}>
-                    {l.kind === "number" ? `${l.num}.` : l.kind === "bullet" ? "–" : ""}
-                  </span>
-                  <span>
-                    {l.text}
-                    {l.date && <span className="num ml-2 rounded bg-[var(--navy-tint)] px-1.5 text-[12px] text-[var(--navy)]">{l.date}</span>}
-                  </span>
-                </div>
-              ),
-            )}
+            {lines.map((line, i) => <NoteLineView key={i} line={line} size={15}/>)}
           </div>
         </div>
       </div>
 
+      <p className="mt-3 text-sm text-[var(--ink-2)]">슬라이드는 작성량에 맞춰 공간을 배분합니다. 한 장에 담기 어려운 노트는 요약 뒤에 상세 페이지를 자동으로 추가하며, 인쇄에도 전체 내용이 포함됩니다.</p>
       {editable && (
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button type="button" className="btn btn-primary" onClick={save} disabled={pending || !dirty}>

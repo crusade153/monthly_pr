@@ -42,7 +42,7 @@ function GaugePanel({
   return (
     <div className="panel flex flex-col items-center !px-3 !py-3">
       <div className="self-start text-[18px] font-semibold text-[var(--navy)]">{title}</div>
-      <HalfGauge attainment={att} color={color} size={196} center={fmt(value)} sub={att === null ? "목표 없음" : `달성 ${att.toFixed(1)}%`} />
+      <HalfGauge attainment={att} color={color} size={160} center={fmt(value)} sub={att === null ? "목표 없음" : `달성 ${att.toFixed(1)}%`} />
       <div className="num text-[14px] text-[var(--ink-2)]">목표 {fmt(target)} · 전년 {fmt(prev)}</div>
       {detail && <div className="num mt-1 text-center text-[13px] text-[var(--ink-2)]">{detail}</div>}
     </div>
@@ -155,7 +155,7 @@ export function SlidePlantSummary({ report, page, total }: Common) {
         </div>
 
         {/* ── 오른쪽: 게이지 4 / 노트 ── */}
-        <div className="grid gap-6" style={{ gridTemplateRows: "auto 1fr" }}>
+        <div className="grid min-h-0 gap-6" style={{ gridTemplateRows: "minmax(0, 1fr) 380px" }}>
           <div className="grid grid-cols-2 gap-4">
             <GaugePanel title="수율" value={s?.yield ?? null} target={nz(s?.targetYield)} prev={nz(py?.yield)}
               fmt={(v) => (v === null ? "–" : `${v.toFixed(1)}%`)} />
