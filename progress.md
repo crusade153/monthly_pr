@@ -195,3 +195,9 @@ monthly_pr `.env.local` 은 위 두 주소(`http://localhost:3101`, `:3102`)와 
 - 인력·노무비 API 93개 당월/비교월/추이 포인트의 단위당 노무비·인당 생산량·연장 의존도 산식, K1/K2/K3 물량달성률·비계획정지율 분모 일치 검증. 팀별 노무비 비교 기준값 및 계산식 표시 보강.
 - 검증: production build, TypeScript, ESLint, capacity/labor 비교 테스트 6개 통과. 실제 API 데이터로 세 공장 13장 정적 렌더 후 브라우저 확인, 본문/패널 넘침 0. 브라우저에서 발견한 팀별 장 높이 초과 및 원가 숫자 겹침 수정.
 - 주간 CAPA 실값은 관리자 입력 필요. 배포·원천 데이터 변경 없음.
+
+
+## 2026-11-11 주간 CAPA 저장 오류 수정
+- 기존 DB의 mr_monthly_capacity_scope_check가 풀 CAPA 5개만 허용해 주간 -day scope 저장이 거절되는 원인 확인.
+- scripts/migrate.mjs의 신규 테이블 정의와 기존 CHECK 갱신을 함께 수정하고 연결 DB에 적용. 기존 데이터 보존.
+- 풀/주간 10개 scope의 DB 쓰기를 롤백 검증하여 모두 통과.

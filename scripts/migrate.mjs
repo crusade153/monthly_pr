@@ -19,10 +19,17 @@ const sql = neon(url);
 const statements = [
   `CREATE TABLE IF NOT EXISTS mr_monthly_capacity (
     id serial PRIMARY KEY, month text NOT NULL CHECK (month ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'),
-    scope text NOT NULL CHECK (scope IN ('K1-frozen','K1-season','K2-1','K2-2','K3')),
+    scope text NOT NULL CHECK (scope IN ('K1-frozen','K1-season','K2-1','K2-2','K3','K1-frozen-day','K1-season-day','K2-1-day','K2-2-day','K3-day')),
     full_qty double precision NOT NULL CHECK (full_qty > 0 AND full_qty <= 1e12),
     version integer NOT NULL DEFAULT 1, updated_by text NOT NULL, updated_at timestamptz NOT NULL DEFAULT now()
   )`,
+  // 기존 설치의 CHECK 제약도 갱신한다. CREATE TABLE IF NOT EXISTS는 기존 제약을 바꾸지 않는다.
+  `ALTER TABLE mr_monthly_capacity
+     DROP CONSTRAINT IF EXISTS mr_monthly_capacity_scope_check,
+     ADD CONSTRAINT mr_monthly_capacity_scope_check CHECK (scope IN (
+       'K1-frozen','K1-season','K2-1','K2-2','K3',
+       'K1-frozen-day','K1-season-day','K2-1-day','K2-2-day','K3-day'
+     ))`,
   `CREATE UNIQUE INDEX IF NOT EXISTS uniq_mr_capacity_month_scope ON mr_monthly_capacity (month, scope)`,
   `DO $$ BEGIN
      CREATE TYPE mr_note_section AS ENUM ('improvement', 'plan');
