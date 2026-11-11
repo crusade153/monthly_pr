@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+/* 6:3:1 — 베이스(아이보리·흰) 60 / 네이비 30 / 골드 10. 프로젝터·인쇄 기준 라이트 전용. */
+:root {
+  --base: #faf8f3;
+  --surface: #ffffff;
+  --line: #e6e1d6;
+  --line-2: #d6d0c2;
+  --ink: #1b1f24;
+  --ink-2: #4b5563;
+  --ink-3: #8a919b;
+  --navy: #1f3a5f;
+  --navy-2: #16304f;
+  --navy-tint: #e9eef5;
+  --gold: #c9a227;
+  --gold-tint: #f7efd6;
+  --good: #2e7d4f;
+  --good-tint: #e6f2ea;
+  --bad: #c8102e;
+  --bad-tint: #fbe7ea;
+  --warn: #d98a00;
+  --flat: #8a919b;
+  --s-prev: #b8bdc7;
+  --s-target: #1f3a5f;
+  --s-actual: #c9a227;
+  --risk-red: #c8102e;
+  --risk-yellow: #d98a00;
+  --risk-green: #2e7d4f;
+  --risk-gray: #8a919b;
+  color-scheme: light;
+}
+
+@theme inline {
+  --font-sans: var(--font-plex-kr), "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
+  --font-mono: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+}
+
+html, body { background: var(--base); color: var(--ink); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink-3); text-transform: uppercase; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 0.6rem; }
+.card-hover { transition: transform .18s ease, box-shadow .18s ease; }
+.card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 24px -14px rgba(31, 58, 95, .35); }
+
+.field-label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 6px; }
+.field { width: 100%; padding: 10px 12px; border: 1px solid var(--line-2); border-radius: 0.45rem; background: #fff; font-size: 14px; }
+.field:focus { outline: 2px solid var(--navy); outline-offset: 1px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 16px; border-radius: 0.45rem;
+  font-size: 14px; font-weight: 500; border: 1px solid var(--line-2); background: #fff; color: var(--ink);
+  transition: background .15s ease, transform .15s ease, border-color .15s ease; }
+.btn:hover { transform: translateY(-1px); border-color: var(--navy); }
+.btn-primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+.btn-primary:hover { background: var(--navy-2); }
+.btn-gold { background: var(--gold); color: #1b1f24; border-color: var(--gold); }
+.btn:disabled { opacity: .5; transform: none; cursor: not-allowed; }
+
+.tone-good { color: var(--good); }
+.tone-bad { color: var(--bad); }
+.tone-flat { color: var(--ink-3); }
+
+/* ── 슬라이드 캔버스 (1920×1080 고정 설계) ── */
+.slide {
+  width: 1920px; height: 1080px; background: var(--surface); color: var(--ink);
+  position: relative; overflow: hidden; font-size: 22px;
+}
+.slide-head { position: absolute; left: 0; right: 0; top: 0; height: 120px; padding: 0 72px;
+  display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--navy); }
+.slide-body { position: absolute; left: 72px; right: 72px; top: 152px; bottom: 72px; }
+.slide-foot { position: absolute; left: 72px; right: 72px; bottom: 24px; height: 28px; display: flex;
+  justify-content: space-between; align-items: center; font-size: 15px; color: var(--ink-3); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px 26px; }
+.panel-title { font-size: 20px; font-weight: 600; color: var(--navy); display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; line-height: 1.35; }
+.slide .panel { min-width: 0; }
+.slide svg { flex-shrink: 0; max-width: 100%; }
+.panel-title small { font-size: 15px; font-weight: 400; color: var(--ink-3); }
+.kicker { font-size: 15px; color: var(--ink-3); }
+
+.tbl { width: 100%; border-collapse: collapse; font-size: 17px; }
+.tbl th { font-weight: 500; color: var(--ink-3); text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+.tbl th:first-child, .tbl td:first-child { text-align: left; }
+.tbl td { padding: 8px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl-compact { font-size: 16px; }
+.tbl-compact th { padding: 5px 7px; }
+.tbl-compact td { padding: 5px 7px; }
+.tbl-dense { font-size: 15px; }
+.tbl-dense td { padding: 3px 7px; }
+
+.badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 14px; font-weight: 500; }
+
+/* ── 발표 모드 ── */
+.deck { position: fixed; inset: 0; background: #11161d; overflow: hidden; }
+.deck-stage { position: absolute; left: 50%; top: 50%; transform-origin: center center; }
+.deck-ui { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center;
+  gap: 10px; padding: 10px 16px; opacity: 0; transition: opacity .2s ease; }
+.deck:hover .deck-ui, .deck-ui:focus-within { opacity: 1; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.enter > * { animation: fadeUp .32s cubic-bezier(.2,.7,.2,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .enter > * { animation: none; }
+  .card-hover:hover, .btn:hover { transform: none; }
+}
+
+/* ── 인쇄: A4 가로. 화면과 같은 슬라이드를 축소해 한 장씩 ── */
+.print-page { width: 281mm; height: 194mm; overflow: hidden; margin: 0 auto 10mm; background: #fff;
+  box-shadow: 0 6px 24px -12px rgba(0,0,0,.35); position: relative; }
+@page { size: A4 landscape; margin: 8mm; }
+@media print {
+  html, body { background: #fff; }
+  .no-print { display: none !important; }
+  .print-page { margin: 0; box-shadow: none; break-after: page; page-break-after: always; }
+  .print-page:last-child { break-after: auto; page-break-after: auto; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
