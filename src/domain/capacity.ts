@@ -12,6 +12,9 @@ export type CapacitySetting = { month: string; scope: string; fullQty: number; v
 export interface CapacityRow {
   key: CapacityKey; label: string; unit: string; qty: number | null; fullQty: number | null;
   dayQty: number | null; dayRate: number | null;
+  prevDayRate: number | null; prevYearDayRate: number | null;
+  prevFullQty: number | null; prevYearFullQty: number | null;
+  prevDayQty: number | null; prevYearDayQty: number | null;
   rate: number | null; prevRate: number | null; prevYearRate: number | null;
 }
 export interface CapacityReport { rows: CapacityRow[]; error: string | null }
@@ -29,11 +32,15 @@ export function buildCapacityReport(plant: PlantCode, month: string, cost: CostR
       }
       return cost.summary[period]?.qty ?? null;
     };
-    const capacity = (m: string) => error ? null : settings.find(s => s.month === m && s.scope === scope.key)?.fullQty ?? null;
+    const capacity = (m: string, day = false) => error ? null : settings.find(s => s.month === m && s.scope === `${scope.key}${day ? '-day' : ''}`)?.fullQty ?? null;
     const rate = (q: number | null, c: number | null) => q !== null && c !== null && c > 0 ? q / c : null;
     const qty = quantity('current'), fullQty = capacity(month);
-    const dayQty = error ? null : settings.find(s => s.month === month && s.scope === `${scope.key}-day`)?.fullQty ?? null;
-    return { ...scope, qty, fullQty, dayQty, dayRate: rate(qty, dayQty), rate: rate(qty, fullQty),
+    const dayQty = capacity(month, true);
+    const prevFullQty = cost ? capacity(cost.prevMonth) : null, prevYearFullQty = cost ? capacity(cost.prevYearMonth) : null;
+    const prevDayQty = cost ? capacity(cost.prevMonth, true) : null, prevYearDayQty = cost ? capacity(cost.prevYearMonth, true) : null;
+    return { ...scope, qty, fullQty, dayQty, prevFullQty, prevYearFullQty, prevDayQty, prevYearDayQty,
+      prevDayRate: rate(quantity('prevMonth'), prevDayQty),
+      prevYearDayRate: rate(quantity('prevYear'), prevYearDayQty), dayRate: rate(qty, dayQty), rate: rate(qty, fullQty),
       prevRate: cost ? rate(quantity('prevMonth'), capacity(cost.prevMonth)) : null,
       prevYearRate: cost ? rate(quantity('prevYear'), capacity(cost.prevYearMonth)) : null };
   }) };

@@ -74,7 +74,7 @@ export function SlideTotal({ month, totalReport, page, total }: { month: string;
     { label: "비계획정지", value: sum.downtimeMinutes === null ? "–" : `${fmtNum(sum.downtimeMinutes)}분`, sub: "생산일보 기준" },
   ];
   return (
-    <SlideFrame title="생산부문 종합" month={month} page={page} total={total} sources="금액(원)·시간(분)만 합산 — 공장별 물량 단위(kg·식)가 달라 물량·단가는 공장 장에서 봅니다">
+    <SlideFrame title="생산부문 종합" month={month} page={page} total={total} sources="금액(원)·시간(분)만 합산 — 공장별 물량 단위(TON·식)가 달라 물량·단가는 공장 장에서 봅니다">
       <div className="grid h-full gap-6" style={{ gridTemplateRows: "150px 360px 1fr" }}>
         <div className="grid grid-cols-6 gap-4">
           {kpis.map((k) => (

@@ -34,3 +34,17 @@ test('주간 1교대 CAPA는 풀 CAPA와 별도 월 기준값을 사용한다', 
   assert.equal(r.rate,null); assert.equal(r.dayRate,2);
  }
 });
+
+test('풀/주간 전월·전년동월은 각 월의 개별 CAPA로 계산한다', () => {
+ const settings = [setting('2026-10','K1-frozen',400),setting('2026-10','K1-frozen-day',200),
+  setting('2026-09','K1-frozen',800),setting('2026-09','K1-frozen-day',400),
+  setting('2025-10','K1-frozen',500),setting('2025-10','K1-frozen-day',250)];
+ const r=buildCapacityReport('K1','2026-10',cost,settings,null).rows[0];
+ assert.equal(r.prevRate,0.25); assert.equal(r.prevYearRate,0.1);
+ assert.equal(r.prevDayRate,0.5); assert.equal(r.prevYearDayRate,0.2);
+ const missing=buildCapacityReport('K1','2026-10',cost,settings.slice(0,2),null).rows[0];
+ assert.equal(missing.prevDayRate,null); assert.equal(missing.prevYearDayRate,null);
+ assert.equal(missing.prevFullQty,null); assert.equal(missing.prevDayQty,null);
+ const error=buildCapacityReport('K1','2026-10',cost,settings,'DB 오류').rows[0];
+ assert.equal(error.prevDayRate,null); assert.equal(error.prevYearDayRate,null);
+});

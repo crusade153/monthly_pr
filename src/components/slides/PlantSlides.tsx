@@ -1,9 +1,10 @@
+import { formatQuantity, quantityUnit } from '@/domain/quantity';
 // 공장별 3장: P1 요약(벤치마크 구조) / P2 원가 / P3 생산운영.
 // 숫자는 원천 API 값을 그대로 쓰고, 여기서는 비교·색·배치만 정한다.
 import { BridgeWaterfall, CompareBars, HalfGauge, HBarTop, Spark, TrendLine12 } from "@/components/charts/charts";
 import { Delta, RiskBadge, SourceError, toneColor } from "@/components/ui/bits";
 import {
-  attainment, deltaTone, fmtNum, fmtPct, fmtQty, fmtSigned, fmtWon, nz, pctDelta, toneOfAttainment,
+  attainment, deltaTone, fmtNum, fmtPct, fmtSigned, fmtWon, nz, pctDelta, toneOfAttainment,
 } from "@/domain/derived";
 import { monthLabel } from "@/domain/month";
 import type { PlantReport } from "@/domain/report";
@@ -68,8 +69,8 @@ export function SlidePlantSummary({ report, page, total }: Common) {
   const pm = cost?.summary.prevMonth ?? null;
   const pt = ops?.plantTotal ?? null;
   const tgt = ops?.teams.find((t) => pt?.primaryTeams.includes(t.team))?.targets ?? null;
-  const qtyUnit = plant === "K1" ? "ton" : units.qty;
-  const displayQty = (v: number | null | undefined) => fmtNum(v == null ? null : v / (plant === "K1" ? 1000 : 1), 1);
+  const qtyUnit = quantityUnit(units.qty);
+  const displayQty = (v: number | null | undefined) => formatQuantity(v, units.qty);
   const primary = ops?.teams.filter(t => pt?.primaryTeams.includes(t.team)) ?? [];
   const planQty = primary.reduce((a,t) => a + t.totals.planQty, 0);
   const actualQty = primary.reduce((a,t) => a + t.totals.actualQty, 0);
@@ -225,7 +226,7 @@ export function SlidePlantCost({ report, page, total }: Common) {
             <div className="panel-title mb-2">▣ 라인별 단위원가 <small>{units.cost} · 등급 = 재료비 목표 대비 차이율</small></div>
             <table className={`tbl tbl-compact ${lines.length > 9 ? "tbl-dense" : ""}`}>
               <thead>
-                <tr><th>라인</th><th>생산량 ({plant === "K1" ? "TON" : units.qty})</th><th>제조원가</th><th>목표</th><th>목표대비</th><th>전월대비</th><th>재료비 관리</th><th>등급</th></tr>
+                <tr><th>라인</th><th>생산량 ({quantityUnit(units.qty)})</th><th>제조원가</th><th>목표</th><th>목표대비</th><th>전월대비</th><th>재료비 관리</th><th>등급</th></tr>
               </thead>
               <tbody>
                 {lines.map((l) => {
@@ -234,7 +235,7 @@ export function SlidePlantCost({ report, page, total }: Common) {
                   return (
                     <tr key={l.id}>
                       <td>{l.label}{l.note && " *"}</td>
-                      <td className="num">{l.hasData ? (plant === "K1" ? fmtNum(l.qty / 1000, 1) : fmtQty(l.qty)) : "–"}</td>
+                      <td className="num">{l.hasData ? formatQuantity(l.qty, units.qty) : "–"}</td>
                       <td className="num font-semibold">{l.hasData ? fmtNum(l.mfgUnit, 1) : "–"}</td>
                       <td className="num text-[var(--ink-3)]">{fmtNum(nz(l.targetUnit), 1)}</td>
                       <td className={`num tone-${deltaTone("cost", vsT)}`}>{fmtSigned(vsT, 1, "%")}</td>
@@ -285,7 +286,7 @@ export function SlidePlantOps({ report, page, total }: Common) {
   const { ops, plant, month, units, cost } = report;
   const frame = {
     plant, title: "생산 운영", month, page, total, asOf: report.asOf,
-    sources: "운영: plog 생산일보(팀 대시보드와 같은 집계, 기본단위)",
+    sources: "운영: plog 생산일보(팀 대시보드와 같은 집계, 수량 TON·식)",
     headline: <HeadlineChip cost={cost} unit={units.cost} />,
   };
   if (!ops) return <SlideFrame {...frame}><SourceError message={report.opsError ?? "생산일보 데이터 없음"} /></SlideFrame>;
@@ -332,10 +333,10 @@ export function SlidePlantOps({ report, page, total }: Common) {
 
         <div className="grid min-h-0 gap-6" style={{ gridTemplateColumns: "1fr 720px" }}>
           <div className="panel min-h-0 overflow-hidden">
-            <div className="panel-title mb-1">▣ 라인별 계획 대비 실적 <small>시간 h · 수량은 기본단위</small></div>
+            <div className="panel-title mb-1">▣ 라인별 계획 대비 실적 <small>시간 h · 수량 {quantityUnit(units.qty)}</small></div>
             <table className={`tbl tbl-compact ${lines.length > 12 ? "tbl-dense" : ""}`}>
               <thead>
-                <tr><th>라인</th><th>계획h</th><th>작업h</th><th>계획시간 대비</th><th>계획수량</th><th>실적수량</th><th>달성률</th><th>정지(분)</th></tr>
+                <tr><th>라인</th><th>계획h</th><th>작업h</th><th>계획시간 대비</th><th>계획수량 ({quantityUnit(units.qty)})</th><th>실적수량 ({quantityUnit(units.qty)})</th><th>달성률</th><th>정지(분)</th></tr>
               </thead>
               <tbody>
                 {lines.map((l) => (
@@ -344,8 +345,8 @@ export function SlidePlantOps({ report, page, total }: Common) {
                     <td className="num">{fmtNum(l.planHr)}</td>
                     <td className="num">{fmtNum(l.actualHr)}</td>
                     <td className="num">{l.planHr ? fmtPct(l.actualHr / l.planHr) : '–'}</td>
-                    <td className="num">{fmtQty(l.planQty)}</td>
-                    <td className="num">{fmtQty(l.actualQty)}</td>
+                    <td className="num">{formatQuantity(l.planQty, units.qty)}</td>
+                    <td className="num">{formatQuantity(l.actualQty, units.qty)}</td>
                     <td>{rateCell(l.planQty ? l.actualQty / l.planQty : 0, 0.98)}</td>
                     <td className="num">{fmtNum(l.downtimeMinutes)}</td>
                   </tr>
