@@ -33,7 +33,7 @@ export function SlidePlantLabor({ report, page, total }: { report: PlantReport; 
   const teamMetrics: Array<{key: MetricKey; label: string; unit: string}> = [
     {key:'headcount',label:'인원 (명)',unit:'명'}, {key:'laborCost',label:'노무비 (백만원)',unit:'백만'},
     {key:'unitLaborCost',label:`단위당 노무비 (원/${units.qty})`,unit:`원/${units.qty}`},
-    {key:'extraHours',label:'추가시간 (h)',unit:'h'}, {key:'qtyPerPerson',label:`인당 생산량 (${quantityUnit(units.qty)}/인)`,unit:`${quantityUnit(units.qty)}/인`},
+    {key:'extraHours',label:'연장근로시간 (h)',unit:'h'}, {key:'qtyPerPerson',label:`인당 생산량 (${quantityUnit(units.qty)}/인)`,unit:`${quantityUnit(units.qty)}/인`},
   ];
   return <SlideFrame plant={report.plant} title="인력 · 노무비" month={report.month} page={page} total={total}
     sources="인원·노무비·근로시간: 임금시간생산성 · 생산량: product-cst · 전년 대비 = 전년동월 대비 · %p = 비율 차이">
@@ -78,9 +78,12 @@ export function SlidePlantLabor({ report, page, total }: { report: PlantReport; 
               const scale=m.key==='laborCost'?1e6:m.key==='qtyPerPerson'?quantityScale(units.qty):1;
               const value=t[m.key] == null ? null : t[m.key]!/scale;
               const prev=t.prevMonth?.[m.key], year=t.prevYear?.[m.key];
-              return <td key={m.key}><div className="num font-semibold">{fmtNum(value,1)}</div>
-                <Comparison compact label={m.key === 'unitLaborCost' ? `전월 ${fmtNum(prev, 1)}` : "전월"} metric={m.key} value={value} base={prev==null?null:prev/scale} unit={m.unit}/>
-                <Comparison compact label={m.key === 'unitLaborCost' ? `전년 ${fmtNum(year, 1)}` : "전년"} metric={m.key} value={value} base={year==null?null:year/scale} unit={m.unit}/>
+              return <td key={m.key}><div className="num flex flex-wrap items-baseline justify-end gap-x-3">
+                <strong>{fmtNum(value,1)}</strong>
+                {m.key === 'unitLaborCost' && <span className="text-[12px] font-normal text-[var(--ink-3)]">전월 {fmtNum(prev,1)} · 전년 {fmtNum(year,1)}</span>}
+              </div>
+                <Comparison compact label="전월" metric={m.key} value={value} base={prev==null?null:prev/scale} unit={m.unit}/>
+                <Comparison compact label="전년" metric={m.key} value={value} base={year==null?null:year/scale} unit={m.unit}/>
               </td>;
             })}</tr>)}</tbody>
           </table>
