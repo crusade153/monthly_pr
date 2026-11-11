@@ -6,7 +6,6 @@ import { fetchCostReport, fetchOpsReport } from "@/lib/api-clients/sources";
 import { getNotes } from "@/lib/notes/repo";
 import { getCapacity } from '@/lib/capacity/repo';
 import { buildCapacityReport } from '@/domain/capacity';
-import { shiftMonth } from '@/domain/month';
 
 export interface MonthBundle {
   month: string;
@@ -21,7 +20,7 @@ export async function loadMonth(month: string, plants: PlantCode[] = PLANT_ORDER
     Promise.all(plants.map((p) => fetchCostReport(p, month, fresh))),
     Promise.all(plants.map((p) => fetchOpsReport(p, month, fresh))),
     getNotes(month, plants),
-    getCapacity([month, shiftMonth(month, -1), shiftMonth(month, -12)]),
+    getCapacity(),
   ]);
   const reports = plants.map((plant, i) => {
     const report = buildPlantReport({ plant, month, cost: costs[i], ops: opses[i], notes: notes.notes[plant] });

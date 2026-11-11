@@ -4,7 +4,7 @@ import type { PlantReport } from '@/domain/report';
 import { SlideFrame } from './SlideFrame';
 
 export function SlideK1Teams({ report, page, total }: { report: PlantReport; page: number; total: number }) {
-  return <SlideFrame plant="K1" title="냉동팀 · 조미팀 실적" month={report.month} page={page} total={total} sources="생산량·원가·생산성: product-cst · 가동률: 실적 생산량 ÷ 관리자 입력 월 풀/주간 1교대 CAPA">
+  return <SlideFrame plant="K1" title="냉동팀 · 조미팀 실적" month={report.month} page={page} total={total} sources="생산량·원가·생산성: product-cst · 가동률: 실적 생산량 ÷ 관리자 입력 고정 풀/주간 1교대 CAPA">
     <div className="grid h-full grid-cols-2 gap-6">
       {(report.cost?.segments ?? []).map(g => {
         const label = g.key === 'K1-frozen' ? '냉동팀' : '조미팀';

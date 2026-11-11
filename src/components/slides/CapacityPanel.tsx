@@ -10,7 +10,7 @@ export function CapacityPanel({ report, compact = false }: { report: PlantReport
   const rows = report.capacity?.rows ?? [];
   return <div className={`panel min-w-0 ${compact ? '!p-3' : ''}`}>
     <div className="panel-title">풀 / 주간 CAPA 가동률</div>
-    <div className="kicker mt-1">실적 생산량 ÷ 각 월 CAPA · 주간 = 1교대</div>
+    <div className="kicker mt-1">월별 실적 ÷ 고정 CAPA · 주간 = 1교대</div>
     {report.capacity?.error ? <p className="mt-3 text-[16px] text-[var(--bad)]">{report.capacity.error}</p> : rows.map(r => <div key={r.key} className="mt-1 border-t border-[var(--line)] pt-1">
       <div className="text-[17px]">{r.label}</div>
       <table className="mt-1 w-full text-right text-[13px]">

@@ -19,7 +19,17 @@ export interface CapacityRow {
 }
 export interface CapacityReport { rows: CapacityRow[]; error: string | null }
 
-export function buildCapacityReport(plant: PlantCode, month: string, cost: CostReport | null, settings: CapacitySetting[], error: string | null): CapacityReport {
+// 기존 월별 저장값 중 가장 최근 저장한 값을 공통 고정 CAPA로 사용한다.
+export function fixedCapacitySettings(settings: CapacitySetting[]): CapacitySetting[] {
+  const latest = new Map<string, CapacitySetting>();
+  for (const setting of [...settings].sort((a,b) => b.updatedAt.localeCompare(a.updatedAt) || b.month.localeCompare(a.month) || b.version - a.version)) {
+    if (!latest.has(setting.scope)) latest.set(setting.scope, setting);
+  }
+  return [...latest.values()];
+}
+
+export function buildCapacityReport(plant: PlantCode, _month: string, cost: CostReport | null, settings: CapacitySetting[], error: string | null): CapacityReport {
+  const fixed = fixedCapacitySettings(settings);
   return { error, rows: CAPACITY_SCOPES.filter(s => s.plant === plant).map(scope => {
     const quantity = (period: 'current' | 'prevMonth' | 'prevYear'): number | null => {
       if (!cost) return null;
@@ -32,16 +42,15 @@ export function buildCapacityReport(plant: PlantCode, month: string, cost: CostR
       }
       return cost.summary[period]?.qty ?? null;
     };
-    const capacity = (m: string, day = false) => error ? null : settings.find(s => s.month === m && s.scope === `${scope.key}${day ? '-day' : ''}`)?.fullQty ?? null;
+    const capacity = (day = false) => error ? null : fixed.find(s => s.scope === `${scope.key}${day ? '-day' : ''}`)?.fullQty ?? null;
     const rate = (q: number | null, c: number | null) => q !== null && c !== null && c > 0 ? q / c : null;
-    const qty = quantity('current'), fullQty = capacity(month);
-    const dayQty = capacity(month, true);
-    const prevFullQty = cost ? capacity(cost.prevMonth) : null, prevYearFullQty = cost ? capacity(cost.prevYearMonth) : null;
-    const prevDayQty = cost ? capacity(cost.prevMonth, true) : null, prevYearDayQty = cost ? capacity(cost.prevYearMonth, true) : null;
+    const qty = quantity('current'), fullQty = capacity(), dayQty = capacity(true);
+    const prevFullQty = fullQty, prevYearFullQty = fullQty;
+    const prevDayQty = dayQty, prevYearDayQty = dayQty;
     return { ...scope, qty, fullQty, dayQty, prevFullQty, prevYearFullQty, prevDayQty, prevYearDayQty,
       prevDayRate: rate(quantity('prevMonth'), prevDayQty),
       prevYearDayRate: rate(quantity('prevYear'), prevYearDayQty), dayRate: rate(qty, dayQty), rate: rate(qty, fullQty),
-      prevRate: cost ? rate(quantity('prevMonth'), capacity(cost.prevMonth)) : null,
-      prevYearRate: cost ? rate(quantity('prevYear'), capacity(cost.prevYearMonth)) : null };
+      prevRate: cost ? rate(quantity('prevMonth'), fullQty) : null,
+      prevYearRate: cost ? rate(quantity('prevYear'), fullQty) : null };
   }) };
 }
