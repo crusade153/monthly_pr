@@ -6,13 +6,13 @@ import type { PlantReport } from '@/domain/report';
 import { EmptySlideBody, SlideFrame } from './SlideFrame';
 
 type MetricKey = 'unitLaborCost' | 'overtimeDependency' | 'headcount' | 'qtyPerPerson' | 'laborCost' | 'extraHours';
-function Comparison({ label, metric, value, base, unit, compact = false }: {
-  label: string; metric: MetricKey; value: number | null | undefined; base: number | null | undefined; unit: string; compact?: boolean;
+function Comparison({ label, metric, value, base, unit, compact = false, centered = false }: {
+  label: string; metric: MetricKey; value: number | null | undefined; base: number | null | undefined; unit: string; compact?: boolean; centered?: boolean;
 }) {
   const change = laborChange(value, base);
   const isRate = metric === 'overtimeDependency';
   const delta = isRate ? change.amount === null ? null : change.amount * 100 : change.percent;
-  return <div className={`flex items-baseline justify-between gap-2 ${compact ? 'text-[14px]' : 'text-[17px]'}`}>
+  return <div className={`flex items-baseline ${centered ? 'justify-center' : 'justify-between'} gap-2 ${compact ? 'text-[14px]' : 'text-[17px]'}`}>
     <span className="shrink-0 text-[var(--ink-3)]">{label}</span>
     <span className={`num whitespace-nowrap tone-${laborTone(metric, delta)}`}>
       {fmtSigned(delta, 1, isRate ? '%p' : '%')}{!isRate && <span className="ml-2 text-[13px] text-[var(--ink-2)]">({fmtSigned(change.amount, metric === 'unitLaborCost' ? 2 : 1)}{unit})</span>}
@@ -73,17 +73,17 @@ export function SlidePlantLabor({ report, page, total }: { report: PlantReport; 
         </div>
         <div className="panel !px-5 !py-3">
           <div className="panel-title mb-2">팀별 증감 <small>당월 실적 · 전월/전년 대비 · 인원·노무비 총액의 증감은 중립 표시</small></div>
-          <table className="tbl tbl-compact" style={{tableLayout:'fixed'}}><thead><tr><th className="w-[100px]">팀</th>{teamMetrics.map(m=><th key={m.key}>{m.label}</th>)}</tr></thead>
+          <table className="tbl tbl-compact" style={{tableLayout:'fixed'}}><thead><tr><th className="w-[100px]">팀</th>{teamMetrics.map(m=><th key={m.key} className={m.key === 'unitLaborCost' ? '!text-center' : undefined}>{m.label}</th>)}</tr></thead>
             <tbody>{labor.teams.map(t => <tr key={t.team}><td className="font-semibold">{t.team}</td>{teamMetrics.map(m=>{
               const scale=m.key==='laborCost'?1e6:m.key==='qtyPerPerson'?quantityScale(units.qty):1;
               const value=t[m.key] == null ? null : t[m.key]!/scale;
               const prev=t.prevMonth?.[m.key], year=t.prevYear?.[m.key];
-              return <td key={m.key}><div className="num flex flex-wrap items-baseline justify-end gap-x-3">
+              return <td key={m.key} className={m.key === 'unitLaborCost' ? '!text-center' : undefined}><div className={`num flex flex-wrap items-baseline ${m.key === 'unitLaborCost' ? 'flex-col !items-center' : 'justify-end'} gap-x-3`}>
                 <strong>{fmtNum(value,1)}</strong>
                 {m.key === 'unitLaborCost' && <span className="text-[12px] font-normal text-[var(--ink-3)]">전월 {fmtNum(prev,1)} · 전년 {fmtNum(year,1)}</span>}
               </div>
-                <Comparison compact label="전월" metric={m.key} value={value} base={prev==null?null:prev/scale} unit={m.unit}/>
-                <Comparison compact label="전년" metric={m.key} value={value} base={year==null?null:year/scale} unit={m.unit}/>
+                <Comparison compact centered={m.key === 'unitLaborCost'} label="전월" metric={m.key} value={value} base={prev==null?null:prev/scale} unit={m.unit}/>
+                <Comparison compact centered={m.key === 'unitLaborCost'} label="전년" metric={m.key} value={value} base={year==null?null:year/scale} unit={m.unit}/>
               </td>;
             })}</tr>)}</tbody>
           </table>
